@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="es">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Sistema de Préstamos de Libros</title>
+    <!-- Link al CSS principal -->
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <!-- Contenedor principal de toda la página -->
+    <div class="container">
+      
+      <!-- Header: título y sección de login/usuario -->
+      <header>
+        <h1>📚 Biblioteca Escolar</h1>
+
+        <!-- Sección de botones de autenticación (login/registro) -->
+        <div id="auth-section" class="auth-buttons">
+          <button onclick="showLogin()">Iniciar Sesión</button>
+          <button onclick="showRegister()">Registrarse</button>
+        </div>
+
+        <!-- Sección que se muestra al usuario ya logueado -->
+        <div id="user-section" style="display: none" class="user-info">
+          <!-- Nombre del usuario logueado -->
+          <span id="user-name"></span>
+          <!-- Botón para cerrar sesión -->
+          <button onclick="logout()">Cerrar Sesión</button>
+        </div>
+      </header>
+
+      <!-- Navegación principal -->
+      <nav id="main-nav" style="display: none">
+        <button onclick="showSection('books')">Libros</button>
+        <button onclick="showSection('loans')">Mis Préstamos</button>
+        <!-- Solo visible para administradores -->
+        <button onclick="showSection('admin')" id="admin-btn" style="display: none">
+          Administración
+        </button>
+      </nav>
+
+      <!-- Contenido principal -->
+      <main>
+
+        <!-- Sección de formularios de autenticación -->
+        <div id="auth-forms">
+          <!-- Formulario de login -->
+          <div id="login-form" class="form-container">
+            <h2>Iniciar Sesión</h2>
+            <input type="email" id="login-email" placeholder="Email" required />
+            <input type="password" id="login-password" placeholder="Contraseña" required />
+            <button onclick="login()">Ingresar</button>
+            <!-- Mensaje de error dinámico -->
+            <p id="login-error" class="error-message"></p>
+          </div>
+
+          <!-- Formulario de registro -->
+          <div id="register-form" class="form-container" style="display: none">
+            <h2>Registrarse</h2>
+            <input type="text" id="register-name" placeholder="Nombre completo" required />
+            <input type="email" id="register-email" placeholder="Email" required />
+            <input type="password" id="register-password" placeholder="Contraseña" required minlength="6" />
+            <select id="register-rol" onchange="toggleGradoField()">
+              <option value="estudiante">Estudiante</option>
+              <option value="profesor">Profesor</option>
+              <option value="administrador">Administrador</option>
+            </select>
+            <!-- Campo extra que solo se muestra para estudiantes -->
+            <input type="text" id="register-grado" placeholder="Grado (solo estudiantes)" style="display: none" />
+            <button onclick="register()">Registrarse</button>
+            <p id="register-error" class="error-message"></p>
+          </div>
+        </div>
+
+        <!-- Sección de libros -->
+        <div id="books-section" class="section" style="display: none">
+          <h2>Catálogo de Libros</h2>
+
+          <!-- Filtros de búsqueda -->
+          <div class="filters">
+            <input type="text" id="search-books" placeholder="Buscar libros..." onkeyup="filterBooks()" />
+            <select id="filter-category" onchange="filterBooks()">
+              <option value="">Todas las categorías</option>
+              <option value="Novela">Novela</option>
+              <option value="Fábula">Fábula</option>
+              <option value="Ciencia ficción">Ciencia ficción</option>
+              <option value="Romance">Romance</option>
+              <option value="Novela clásica">Novela clásica</option>
+            </select>
+          </div>
+
+          <!-- Contenedor donde se mostrarán los libros dinámicamente -->
+          <div id="books-list" class="books-grid"></div>
+        </div>
+
+        <!-- Sección de préstamos del usuario -->
+        <div id="loans-section" class="section" style="display: none">
+          <h2>Mis Préstamos</h2>
+
+          <!-- Filtro por estado del préstamo -->
+          <div id="loans-filter">
+            <select id="filter-loan-status" onchange="loadLoans()">
+              <option value="">Todos los estados</option>
+              <option value="activo">Activos</option>
+              <option value="atrasado">Atrasados</option>
+              <option value="completado">Completados</option>
+            </select>
+          </div>
+
+          <!-- Contenedor donde se mostrarán los préstamos dinámicamente -->
+          <div id="loans-list"></div>
+        </div>
+
+        <!-- Sección de administración -->
+        <div id="admin-section" class="section" style="display: none">
+          <h2>Administración</h2>
+
+          <!-- Botones de acción administrativa -->
+          <div class="admin-actions">
+            <button onclick="showAddBookForm()" class="btn-primary">➕ Agregar Libro</button>
+            <button onclick="loadAllLoans()" class="btn-secondary">📋 Ver Todos los Préstamos</button>
+          </div>
+
+          <!-- Formulario de agregar libro -->
+          <div id="add-book-form" class="form-container" style="display: none">
+            <h3>Agregar Nuevo Libro</h3>
+            <input type="text" id="book-title" placeholder="Título *" required />
+            <input type="text" id="book-author" placeholder="Autor *" required />
+            <input type="text" id="book-editorial" placeholder="Editorial *" required />
+            <input type="number" id="book-year" placeholder="Año de publicación *" required min="1000" max="2024" />
+            <input type="text" id="book-category" placeholder="Categoría *" required />
+            <input type="number" id="book-quantity" placeholder="Cantidad *" required min="1" />
+            <input type="file" id="book-image" accept="image/*" />
+            <div class="form-buttons">
+              <button onclick="addBook()" class="btn-success">Agregar Libro</button>
+              <button onclick="hideAddBookForm()" class="btn-danger">Cancelar</button>
+            </div>
+            <p id="add-book-error" class="error-message"></p>
+          </div>
+
+          <!-- Contenedor de todos los préstamos del sistema -->
+          <div id="all-loans-section" style="display: none">
+            <h3>Todos los Préstamos del Sistema</h3>
+            <div id="all-loans-list"></div>
+          </div>
+        </div>
+
+        <!-- Indicador de carga -->
+        <div id="loading" style="display: none">
+          <div class="loading-spinner"></div>
+          <p>Cargando...</p>
+        </div>
+      </main>
+    </div>
+
+    <!-- Script principal -->
+    <script src="script.js"></script>
+  </body>
+</html>
