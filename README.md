@@ -16,13 +16,20 @@ Este proyecto es un sistema de gestión de biblioteca escolar. Permite el regist
 
 ## Estructura del Proyecto
 
-├── backend
+📂 PROYECTO_PERSONAL_LIBRERIA_CSOLIS
+├── node_modules
+├── src
+│ ├── config
+│ │ ├── createAdmin.js
+│ │ ├── database.js
+│ │ └── seedData.js
 │ ├── controllers
 │ │ ├── authController.js
 │ │ ├── bookController.js
 │ │ └── loanController.js
-│ ├── middlewares
-│ │ └── authMiddleware.js
+│ ├── middleware
+│ │ ├── auth.js
+│ │ └── upload.js
 │ ├── models
 │ │ ├── Book.js
 │ │ ├── Loan.js
@@ -31,16 +38,19 @@ Este proyecto es un sistema de gestión de biblioteca escolar. Permite el regist
 │ │ ├── authRoutes.js
 │ │ ├── bookRoutes.js
 │ │ └── loanRoutes.js
-│ ├── seed
-│ │ └── seedBooks.js
-│ ├── db.js
-│ ├── server.js
-│ └── .env
-└── frontend
-├── index.html
-├── main.js
-└── styles.css
-
+│ └── ...
+├── public
+│ ├── index.html
+│ ├── script.js
+│ └── styles.css
+├── uploads
+│ └── ...
+├── .env
+├── .gitignore
+├── package-lock.json
+├── package.json
+├── README.md
+├── server.js
 
 ---
 
@@ -86,3 +96,4 @@ Administradores pueden agregar, editar y eliminar libros.
 Usuarios pueden solicitar préstamos y devolver libros.
 
 Los libros se actualizan dinámicamente en la interfaz según su estado.
+```
