@@ -52,7 +52,7 @@ Este proyecto es un sistema de gestión de biblioteca escolar. Permite el regist
 ├── README.md
 ├── server.js
 
----
+    ---
 
 ## Instalación
 

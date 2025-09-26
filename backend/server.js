@@ -5,20 +5,20 @@ const cors = require("cors");
 const path = require("path");
 
 // Importar rutas
-const authRoutes = require("./src/routes/authRoutes");
-const bookRoutes = require("./src/routes/bookRoutes");
-const loanRoutes = require("./src/routes/loanRoutes");
+const authRoutes = require("./routes/authRoutes");
+const bookRoutes = require("./routes/bookRoutes");
+const loanRoutes = require("./routes/loanRoutes");
 
 // Importar configuración de base de datos
-const connectDB = require("./src/config/database");
+const connectDB = require("./config/database");
 
 const app = express();
 
 // Middleware
 app.use(cors());
 app.use(express.json());
-app.use(express.static("src/public"));
-app.use("/uploads", express.static("src/uploads"));
+app.use(express.static("/public"));
+app.use("/uploads", express.static("/uploads"));
 
 // Routes
 app.use("/api/auth", authRoutes);
@@ -27,7 +27,7 @@ app.use("/api/loans", loanRoutes);
 
 // Serve frontend
 app.get("/", (req, res) => {
-  res.sendFile(path.join(__dirname, "src/public", "index.html"));
+  res.sendFile(path.join(__dirname, "/public", "index.html"));
 });
 
 // Manejo de errores de rutas no encontradas
