@@ -1,6 +1,6 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
-module.exports = async function connectDB() {
+const connectDB = async () => {
   try {
     const uri = process.env.MONGO_URI || 'mongodb://localhost:27017/biblioteca';
     await mongoose.connect(uri, { useNewUrlParser: true, useUnifiedTopology: true });
@@ -10,3 +10,5 @@ module.exports = async function connectDB() {
     process.exit(1);
   }
 };
+
+export default connectDB;

@@ -1,7 +1,7 @@
-const jwt = require('jsonwebtoken');
-const User = require('../models/User');
+import jwt from 'jsonwebtoken';
+import User from '../models/User.js';
 
-module.exports = async function(req, res, next) {
+export default async function (req, res, next) {
   try {
     const authHeader = req.header('Authorization');
     const token = authHeader ? authHeader.split(' ')[1] : null;
@@ -17,4 +17,4 @@ module.exports = async function(req, res, next) {
     console.error(err);
     res.status(401).json({ msg: 'Token inválido o expirado' });
   }
-};
+}

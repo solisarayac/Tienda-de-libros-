@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+import mongoose from 'mongoose';
 
 const LoanSchema = new mongoose.Schema({
   user: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -9,4 +9,7 @@ const LoanSchema = new mongoose.Schema({
   status: { type: String, enum: ['borrowed','returned','overdue'], default: 'borrowed' }
 }, { timestamps: true });
 
-module.exports = mongoose.model('Loan', LoanSchema);
+const Loan = mongoose.model('Loan', LoanSchema);
+
+export default Loan;
+

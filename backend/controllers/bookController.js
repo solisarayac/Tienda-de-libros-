@@ -1,11 +1,13 @@
-const Book = require('../models/Book.js');
+import Book from '../models/Book.js';
 
-exports.getAll = async (req, res) => {
+export const getAll = async (req, res) => {
   try {
     const q = req.query.q || '';
     const page = parseInt(req.query.page || '1');
     const limit = parseInt(req.query.limit || '30');
-    const filter = q ? { $or: [{ title: new RegExp(q, 'i') }, { author: new RegExp(q, 'i') }] } : {};
+    const filter = q
+      ? { $or: [{ title: new RegExp(q, 'i') }, { author: new RegExp(q, 'i') }] }
+      : {};
 
     const books = await Book.find(filter)
       .skip((page - 1) * limit)
@@ -20,7 +22,7 @@ exports.getAll = async (req, res) => {
   }
 };
 
-exports.getOne = async (req, res) => {
+export const getOne = async (req, res) => {
   try {
     const book = await Book.findById(req.params.id);
     if (!book) return res.status(404).json({ msg: 'Libro no encontrado' });
@@ -31,7 +33,7 @@ exports.getOne = async (req, res) => {
   }
 };
 
-exports.create = async (req, res) => {
+export const create = async (req, res) => {
   try {
     const { title, author, isbn, description, copiesTotal } = req.body;
     if (!title || !author) return res.status(400).json({ msg: 'Faltan campos' });
@@ -57,13 +59,12 @@ exports.create = async (req, res) => {
   }
 };
 
-exports.update = async (req, res) => {
+export const update = async (req, res) => {
   try {
     const { title, author, isbn, description, copiesTotal } = req.body;
     const book = await Book.findById(req.params.id);
     if (!book) return res.status(404).json({ msg: 'Libro no encontrado' });
 
-    // update numeric fields safely
     if (copiesTotal) {
       const newTotal = parseInt(copiesTotal);
       const diff = newTotal - book.copiesTotal;
@@ -85,7 +86,7 @@ exports.update = async (req, res) => {
   }
 };
 
-exports.remove = async (req, res) => {
+export const remove = async (req, res) => {
   try {
     const book = await Book.findByIdAndDelete(req.params.id);
     if (!book) return res.status(404).json({ msg: 'Libro no encontrado' });

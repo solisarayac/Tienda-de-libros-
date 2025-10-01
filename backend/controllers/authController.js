@@ -2,10 +2,11 @@ import User from '../models/User.js';
 import bcrypt from 'bcryptjs';
 import jwt from 'jsonwebtoken';
 
-exports.register = async (req, res) => {
+export const register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
-    if (!name || !email || !password) return res.status(400).json({ msg: 'Faltan datos requeridos' });
+    if (!name || !email || !password)
+      return res.status(400).json({ msg: 'Faltan datos requeridos' });
 
     let user = await User.findOne({ email });
     if (user) return res.status(400).json({ msg: 'Usuario ya existe' });
@@ -16,19 +17,27 @@ exports.register = async (req, res) => {
     user = new User({ name, email, password: hashed, role: role || 'student' });
     await user.save();
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_EXPIRES_IN || '7d' });
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.TOKEN_EXPIRES_IN || '7d' }
+    );
 
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+    res.json({
+      token,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error' });
   }
 };
 
-exports.login = async (req, res) => {
+export const login = async (req, res) => {
   try {
     const { email, password } = req.body;
-    if (!email || !password) return res.status(400).json({ msg: 'Faltan credenciales' });
+    if (!email || !password)
+      return res.status(400).json({ msg: 'Faltan credenciales' });
 
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ msg: 'Credenciales no válidas' });
@@ -36,16 +45,23 @@ exports.login = async (req, res) => {
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ msg: 'Credenciales no válidas' });
 
-    const token = jwt.sign({ id: user._id }, process.env.JWT_SECRET, { expiresIn: process.env.TOKEN_EXPIRES_IN || '7d' });
+    const token = jwt.sign(
+      { id: user._id },
+      process.env.JWT_SECRET,
+      { expiresIn: process.env.TOKEN_EXPIRES_IN || '7d' }
+    );
 
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email, role: user.role } });
+    res.json({
+      token,
+      user: { id: user._id, name: user.name, email: user.email, role: user.role }
+    });
   } catch (err) {
     console.error(err);
     res.status(500).json({ msg: 'Server error' });
   }
 };
 
-exports.me = async (req, res) => {
+export const me = async (req, res) => {
   try {
     res.json({ user: req.user });
   } catch (err) {

@@ -1,10 +1,11 @@
-const express = require('express');
+import express from 'express';
+import auth from '../middlewares/auth.js';
+import * as ctrl from '../controllers/loanController.js';
+
 const router = express.Router();
-const auth = require('../middlewares/auth');
-const ctrl = require('../controllers/loanController');
 
 router.get('/', auth, ctrl.getUserLoans);
 router.post('/borrow', auth, ctrl.borrow);
 router.post('/return/:id', auth, ctrl.returnBook);
 
-module.exports = router;
+export default router;

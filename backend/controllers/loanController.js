@@ -1,10 +1,9 @@
-const Loan = require('../models/Loan');
-const Book = require('../models/Book');
+import Loan from '../models/Loan.js';
+import Book from '../models/Book.js';
 
-exports.getUserLoans = async (req, res) => {
+export const getUserLoans = async (req, res) => {
   try {
     const loans = await Loan.find({ user: req.user._id }).populate('book').sort({ borrowedAt: -1 });
-    // update overdue status on fetch (simple)
     const now = new Date();
     for (const loan of loans) {
       if (loan.status === 'borrowed' && loan.dueDate < now) {
@@ -18,7 +17,7 @@ exports.getUserLoans = async (req, res) => {
   }
 };
 
-exports.borrow = async (req, res) => {
+export const borrow = async (req, res) => {
   try {
     const { bookId, days } = req.body;
     if (!bookId) return res.status(400).json({ msg: 'bookId es requerido' });
@@ -28,12 +27,12 @@ exports.borrow = async (req, res) => {
 
     if (book.copiesAvailable < 1) return res.status(400).json({ msg: 'No hay copias disponibles' });
 
-    book.copiesAvailable = book.copiesAvailable - 1;
+    book.copiesAvailable -= 1;
     await book.save();
 
     const borrowedAt = new Date();
     const dueDate = new Date(borrowedAt);
-    dueDate.setDate(dueDate.getDate() + (parseInt(days) || 14)); // default 14 días
+    dueDate.setDate(dueDate.getDate() + (parseInt(days) || 14));
 
     const loan = new Loan({
       user: req.user._id,
@@ -52,7 +51,7 @@ exports.borrow = async (req, res) => {
   }
 };
 
-exports.returnBook = async (req, res) => {
+export const returnBook = async (req, res) => {
   try {
     const loanId = req.params.id;
     const loan = await Loan.findById(loanId).populate('book');
