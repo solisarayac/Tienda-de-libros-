@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import dotenv from "dotenv";
-import Libro from "./models/Book.js"; // probamos con la colección de libros
+import Book from "./models/Book.js"; // probamos con la colección de libros
 
 dotenv.config();
 
@@ -10,7 +10,7 @@ const main = async () => {
     await mongoose.connect(process.env.MONGO_URI);
     console.log("✅ Conexión a MongoDB exitosa");
 
-    const nuevoLibro = new Libro({
+    const nuevoLibro = new Book({
       title: "El Principito",
       author: "Antoine de Saint-Exupéry",
       year: 1943,
@@ -24,7 +24,7 @@ const main = async () => {
     console.log("📚 Libro guardado en la BD:", guardado);
 
     // Buscar todos los libros
-    const libros = await Libro.find();
+    const libros = await Book.find();
     console.log("📖 Libros en la colección:", libros);
 
     // Cerrar conexión

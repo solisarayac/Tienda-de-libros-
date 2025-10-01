@@ -10,6 +10,6 @@ const BookSchema = new mongoose.Schema({
   coverUrl: { type: String, default: "" } // ruta relativa a /uploads/...
 }, { timestamps: true });
 
-const Libro = mongoose.model("Libro", BookSchema);
+const Book = mongoose.model("Book", BookSchema);
 
-export default Libro;
+export default Book;
