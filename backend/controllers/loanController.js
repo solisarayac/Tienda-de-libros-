@@ -1,24 +1,32 @@
 import Loan from '../models/Loan.js';
 import Book from '../models/Book.js';
+import User from '../models/User.js';
 
 export const getUserLoans = async (req, res) => {
   try {
-    const user = req.user;
-    let loans;
-
-    if (user.role === 'admin') {
-      // Admin ve todos los préstamos
-      loans = await Loan.find().populate('book user').sort({ borrowedAt: -1 });
-    } else {
-      // Student ve solo sus préstamos
-      loans = await Loan.find({ user: user._id }).populate('book').sort({ borrowedAt: -1 });
-    }
+    const loans = await Loan.find({ user: req.user._id })
+      .populate('book')
+      .sort({ borrowedAt: -1 });
 
     const now = new Date();
-    for (const loan of loans) {
-      if (loan.status === 'borrowed' && loan.dueDate < now) loan.status = 'overdue';
-    }
+    loans.forEach((loan) => {
+      if (loan.status === 'borrowed' && loan.dueDate < now) {
+        loan.status = 'overdue';
+      }
+    });
 
+    res.json(loans);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+export const getAllLoansAdmin = async (req, res) => {
+  try {
+    if (req.user.role !== 'admin') return res.status(403).json({ msg: 'No autorizado' });
+
+    const loans = await Loan.find().populate('book').populate('user').sort({ borrowedAt: -1 });
     res.json(loans);
   } catch (err) {
     console.error(err);
@@ -28,15 +36,13 @@ export const getUserLoans = async (req, res) => {
 
 export const borrow = async (req, res) => {
   try {
-    if (req.user.role !== 'student')
-      return res.status(403).json({ msg: 'Solo estudiantes pueden pedir prestado' });
+    if (req.user.role !== 'student') return res.status(403).json({ msg: 'Solo estudiantes pueden pedir libros' });
 
     const { bookId, days } = req.body;
     if (!bookId) return res.status(400).json({ msg: 'bookId es requerido' });
 
     const book = await Book.findById(bookId);
     if (!book) return res.status(404).json({ msg: 'Libro no encontrado' });
-
     if (book.copiesAvailable < 1) return res.status(400).json({ msg: 'No hay copias disponibles' });
 
     book.copiesAvailable -= 1;
@@ -53,8 +59,8 @@ export const borrow = async (req, res) => {
       dueDate,
       status: 'borrowed'
     });
-
     await loan.save();
+
     res.status(201).json(loan);
   } catch (err) {
     console.error(err);
@@ -75,7 +81,7 @@ export const returnBook = async (req, res) => {
     await loan.save();
 
     const book = await Book.findById(loan.book._id);
-    book.copiesAvailable = (book.copiesAvailable || 0) + 1;
+    book.copiesAvailable += 1;
     await book.save();
 
     res.json({ msg: 'Libro devuelto', loan });

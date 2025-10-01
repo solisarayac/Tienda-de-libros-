@@ -1,28 +1,31 @@
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 
 const Loan = ({ token, user }) => {
   const [loans, setLoans] = useState([]);
   const [books, setBooks] = useState([]);
-  const [days, setDays] = useState(14);
+  const [loading, setLoading] = useState(false);
+
+  const fetchLoans = async () => {
+    try {
+      setLoading(true);
+      const res = await fetch("http://localhost:5000/api/prestamos", {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      const data = await res.json();
+      setLoans(data);
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const fetchBooks = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/libros");
       const data = await res.json();
-      setBooks(data.data || []);
-    } catch (err) {
-      console.error(err);
-      alert(err.message);
-    }
-  };
-
-  const fetchLoans = async () => {
-    try {
-      const res = await fetch("http://localhost:5000/api/prestamos", {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      const data = await res.json();
-      setLoans(data || []);
+      setBooks(data.data.filter((b) => b.copiesAvailable > 0)); // solo disponibles
     } catch (err) {
       console.error(err);
       alert(err.message);
@@ -31,84 +34,89 @@ const Loan = ({ token, user }) => {
 
   const handleBorrow = async (bookId) => {
     try {
+      const days = prompt("¿Por cuántos días quieres pedir el libro?", "14");
+      if (!days) return;
       const res = await fetch("http://localhost:5000/api/prestamos/borrow", {
         method: "POST",
-        headers: { 
-          "Content-Type": "application/json", 
-          Authorization: `Bearer ${token}` 
-        },
-        body: JSON.stringify({ bookId, days })
+        headers: { "Content-Type": "application/json", Authorization: `Bearer ${token}` },
+        body: JSON.stringify({ bookId, days }),
       });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.msg || "Error al pedir prestado");
-      alert("Libro pedido correctamente");
-      fetchBooks();
+      if (!res.ok) throw new Error("No se pudo pedir el libro");
       fetchLoans();
-    } catch (err) {
-      alert(err.message);
-    }
-  };
-
-  const handleReturn = async (loanId) => {
-    try {
-      const res = await fetch(`http://localhost:5000/api/prestamos/return/${loanId}`, {
-        method: "POST",
-        headers: { Authorization: `Bearer ${token}` }
-      });
-
-      const data = await res.json();
-      if (!res.ok) throw new Error(data.msg || "Error al devolver libro");
-      alert("Libro devuelto correctamente");
       fetchBooks();
-      fetchLoans();
     } catch (err) {
+      console.error(err);
       alert(err.message);
     }
   };
 
   useEffect(() => {
-    fetchBooks();
     fetchLoans();
+    fetchBooks();
   }, []);
 
+  const handleReturn = async (loanId) => {
+    try {
+      const res = await fetch(`http://localhost:5000/api/prestamos/return/${loanId}`, {
+        method: "POST",
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      if (!res.ok) throw new Error("No se pudo devolver el libro");
+      fetchLoans();
+      fetchBooks();
+    } catch (err) {
+      console.error(err);
+      alert(err.message);
+    }
+  };
+
   return (
-    <div>
-      <h2>Pedir libros</h2>
-      <label>Días de préstamo:</label>
-      <input type="number" value={days} onChange={e => setDays(e.target.value)} min={1} />
+    <div className="loan-container">
+      <h2>Libros Disponibles para Pedir</h2>
+      {books.length === 0 ? (
+        <p>No hay libros disponibles.</p>
+      ) : (
+        <ul className="list-group mb-4">
+          {books.map((book) => (
+            <li key={book._id} className="list-group-item d-flex justify-content-between align-items-center">
+              <span>{book.title} - {book.author}</span>
+              <button className="btn btn-sm btn-primary" onClick={() => handleBorrow(book._id)}>Pedir</button>
+            </li>
+          ))}
+        </ul>
+      )}
 
-      <ul className="list-group mt-2">
-        <h3>Libros disponibles</h3>
-        {books.map(book => (
-          <li key={book._id} className="list-group-item">
-            <strong>{book.title}</strong> - {book.author} | Copias: {book.copiesAvailable}
-            <button
-              className="btn btn-primary btn-sm ms-2"
-              disabled={book.copiesAvailable < 1}
-              onClick={() => handleBorrow(book._id)}
-            >
-              {book.copiesAvailable < 1 ? "No disponible" : "Pedir libro"}
-            </button>
-          </li>
-        ))}
-      </ul>
-
-      <ul className="list-group mt-4">
-        <h3>Mis préstamos</h3>
-        {loans.map(loan => (
-          <li key={loan._id} className="list-group-item d-flex justify-content-between align-items-center">
-            <div>
-              <strong>{loan.book.title}</strong> - {loan.book.author} | Estado: {loan.status} | Vence: {new Date(loan.dueDate).toLocaleDateString()}
-            </div>
-            {loan.status === "borrowed" && (
-              <button className="btn btn-success btn-sm" onClick={() => handleReturn(loan._id)}>
-                Devolver
-              </button>
-            )}
-          </li>
-        ))}
-      </ul>
+      <h2>Mis Préstamos</h2>
+      {loans.length === 0 ? <p>No tienes préstamos activos.</p> : (
+        <table className="table table-striped">
+          <thead>
+            <tr>
+              <th>Libro</th>
+              <th>Fecha de préstamo</th>
+              <th>Fecha de devolución</th>
+              <th>Estado</th>
+              <th>Acción</th>
+            </tr>
+          </thead>
+          <tbody>
+            {loans.map((loan) => (
+              <tr key={loan._id}>
+                <td>{loan.book ? loan.book.title : "Libro eliminado"}</td>
+                <td>{loan.borrowedAt ? new Date(loan.borrowedAt).toLocaleDateString() : "-"}</td>
+                <td>{loan.returnedAt ? new Date(loan.returnedAt).toLocaleDateString() : "-"}</td>
+                <td>{loan.status}</td>
+                <td>
+                  {loan.status === "borrowed" ? (
+                    <button className="btn btn-sm btn-success" onClick={() => handleReturn(loan._id)}>
+                      Devolver
+                    </button>
+                  ) : "-"}
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      )}
     </div>
   );
 };

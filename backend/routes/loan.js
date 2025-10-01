@@ -4,8 +4,12 @@ import * as ctrl from '../controllers/loanController.js';
 
 const router = express.Router();
 
-router.get('/', auth, ctrl.getUserLoans);      // Admin: todos | Student: propios
-router.post('/borrow', auth, ctrl.borrow);     // Solo estudiantes
-router.post('/return/:id', auth, ctrl.returnBook); // Estudiantes devuelven libros
+// Estudiante
+router.get('/', auth, ctrl.getUserLoans);
+router.post('/borrow', auth, ctrl.borrow);
+router.post('/return/:id', auth, ctrl.returnBook);
+
+// Admin
+router.get('/admin', auth, ctrl.getAllLoansAdmin);
 
 export default router;

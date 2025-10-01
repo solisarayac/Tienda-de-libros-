@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import BookList from "./components/BookList.jsx";
-import BookForm from "./components/BookForm.jsx";
+import BookList from "./components/Booklist.jsx";
+import BookForm from "./components/Bookform.jsx";
 import Auth from "./components/Auth.jsx";
 import Loan from "./components/Loan.jsx";
 import AdminLoans from "./components/AdminLoans.jsx";
@@ -8,80 +8,72 @@ import AdminLoans from "./components/AdminLoans.jsx";
 const App = () => {
   const [user, setUser] = useState(null);
   const [refresh, setRefresh] = useState(false);
-  const [tab, setTab] = useState("books");
+  const [activeTab, setActiveTab] = useState("books");
 
   if (!user) return <Auth onLogin={setUser} />;
 
   const token = localStorage.getItem("token");
 
   return (
-    <div className="min-h-screen bg-gray-50 p-4">
+    <div className="container p-4">
       {/* Topbar */}
-      <div className="flex justify-between items-center mb-6 bg-white shadow rounded px-6 py-3">
-        <h1 className="text-2xl font-bold">Biblioteca</h1>
-        <div className="flex space-x-3">
-          <button
-            className={`px-4 py-2 rounded ${
-              tab === "books" ? "bg-blue-500 text-white" : "bg-gray-200"
-            }`}
-            onClick={() => setTab("books")}
-          >
-            Libros
-          </button>
-          {user.role === "student" && (
-            <button
-              className={`px-4 py-2 rounded ${
-                tab === "loans" ? "bg-blue-500 text-white" : "bg-gray-200"
-              }`}
-              onClick={() => setTab("loans")}
-            >
-              Mis préstamos
-            </button>
-          )}
-          {user.role === "admin" && (
-            <button
-              className={`px-4 py-2 rounded ${
-                tab === "adminLoans" ? "bg-blue-500 text-white" : "bg-gray-200"
-              }`}
-              onClick={() => setTab("adminLoans")}
-            >
-              Préstamos activos
-            </button>
-          )}
-        </div>
+      <div className="d-flex mb-3 gap-2">
         <button
-          className="bg-red-500 text-white px-3 py-1 rounded hover:bg-red-400"
-          onClick={() => {
-            localStorage.removeItem("token");
-            setUser(null);
-          }}
+          className={`btn ${activeTab === "books" ? "btn-brown" : "btn-outline-brown"}`}
+          onClick={() => setActiveTab("books")}
         >
-          Cerrar sesión
+          Libros, Revistas, etc.
         </button>
+        <button
+          className={`btn ${activeTab === "loans" ? "btn-brown" : "btn-outline-brown"}`}
+          onClick={() => setActiveTab("loans")}
+        >
+          Prestamos activos.
+        </button>
+        {user.role === "admin" && (
+          <button
+            className={`btn ${activeTab === "add" ? "btn-brown" : "btn-outline-brown"}`}
+            onClick={() => setActiveTab("add")}
+          >
+            Agregar nuevos libros.
+          </button>
+        )}
       </div>
 
-      {/* Contenido */}
-      <div className="bg-white p-6 rounded shadow">
-        {tab === "books" && (
-          <>
-            <BookList key={refresh} token={token} user={user} />
-            {user.role === "admin" && (
-              <div className="mt-6">
-                <BookForm
-                  onBookAdded={() => setRefresh(!refresh)}
-                  token={token}
-                />
-              </div>
-            )}
-          </>
-        )}
-        {tab === "loans" && user.role === "student" && (
-          <Loan token={token} user={user} />
-        )}
-        {tab === "adminLoans" && user.role === "admin" && (
-          <AdminLoans token={token} />
+      {/* Contenedores */}
+      <div style={{ display: activeTab === "books" ? "block" : "none" }}>
+        <div className="p-3 mb-3" style={{ backgroundColor: "#e3d6c0", borderRadius: "8px" }}>
+          <BookList key={refresh} token={token} user={user} />
+        </div>
+      </div>
+
+      <div style={{ display: activeTab === "loans" ? "block" : "none" }}>
+        <div className="p-3 mb-3" style={{ backgroundColor: "#f0e6dc", borderRadius: "8px" }}>  
+          {user.role === "admin" ? (
+            <AdminLoans token={token} />
+          ) : (
+            <Loan token={token} user={user} /> // Estudiante puede pedir libros aquí
+          )}
+        </div>
+      </div>
+
+      <div style={{ display: activeTab === "add" ? "block" : "none" }}>
+        {user.role === "admin" && (
+          <div className="p-3 mb-3" style={{ backgroundColor: "#d7c2a5", borderRadius: "8px" }}>
+            <BookForm onBookAdded={() => setRefresh(!refresh)} token={token} />
+          </div>
         )}
       </div>
+
+      <button
+        className="btn btn-brown mt-2"
+        onClick={() => {
+          localStorage.removeItem("token");
+          setUser(null);
+        }}
+      >
+        Cerrar sesión
+      </button>
     </div>
   );
 };

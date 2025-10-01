@@ -11,27 +11,27 @@ const BookList = ({ token, user }) => {
   const fetchBooks = async () => {
     try {
       const res = await fetch("http://localhost:5000/api/libros");
+      if (!res.ok) throw new Error("Error al obtener libros");
       const result = await res.json();
       setBooks(result.data || []);
     } catch (err) {
       console.error(err);
+      alert(err.message);
     }
   };
-
-  useEffect(() => {
-    fetchBooks();
-  }, []);
 
   const handleDelete = async (id) => {
     if (!window.confirm("¿Seguro quieres eliminar este libro?")) return;
     try {
-      await fetch(`http://localhost:5000/api/libros/${id}`, {
+      const res = await fetch(`http://localhost:5000/api/libros/${id}`, {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
       });
+      if (!res.ok) throw new Error("No se pudo eliminar");
       fetchBooks();
     } catch (err) {
       console.error(err);
+      alert(err.message);
     }
   };
 
@@ -53,56 +53,129 @@ const BookList = ({ token, user }) => {
     if (editCover) formData.append("cover", editCover);
 
     try {
-      await fetch(`http://localhost:5000/api/libros/${editingBook._id}`, {
-        method: "PUT",
-        headers: { Authorization: `Bearer ${token}` },
-        body: formData,
-      });
+      const res = await fetch(
+        `http://localhost:5000/api/libros/${editingBook._id}`,
+        {
+          method: "PUT",
+          headers: { Authorization: `Bearer ${token}` },
+          body: formData,
+        }
+      );
+      if (!res.ok) throw new Error("No se pudo actualizar");
       setEditingBook(null);
       fetchBooks();
     } catch (err) {
       console.error(err);
+      alert(err.message);
     }
   };
 
   const cancelEdit = () => setEditingBook(null);
 
+  useEffect(() => {
+    fetchBooks();
+  }, []);
+
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-      {books.map((book) => (
-        <div key={book._id} className="border rounded shadow p-4 flex flex-col items-center">
-          <div className="w-full h-48 overflow-hidden rounded mb-2">
-            <img
-              src={`http://localhost:5000${book.coverUrl}`}
-              alt={book.title}
-              className="w-full h-full object-cover"
-            />
-          </div>
-          <h3 className="font-bold text-lg text-center">{book.title}</h3>
-          <p className="text-center">{book.author}</p>
-          <p className="text-center">Copias: {book.copiesAvailable}/{book.copiesTotal}</p>
-
-          {user.role === "admin" && !editingBook && (
-            <div className="flex space-x-2 mt-2">
-              <button className="bg-yellow-500 text-white px-2 py-1 rounded hover:bg-yellow-400" onClick={() => startEditing(book)}>Editar</button>
-              <button className="bg-red-500 text-white px-2 py-1 rounded hover:bg-red-400" onClick={() => handleDelete(book._id)}>Eliminar</button>
+    <div className="book-list-container p-3 mb-4 border rounded shadow-sm">
+      <h2>Libros Disponibles</h2>
+      <ul className="list-group">
+        {books.map((book, index) => (
+          <li
+            key={book._id}
+            className={`list-group-item d-flex align-items-center ${
+              index % 2 === 0 ? "bg-light" : "bg-white"
+            }`}
+          >
+            <div style={{ width: "300px", height: "100px" }}>
+              {book.coverUrl ? (
+                <img
+                  src={`http://localhost:5000${book.coverUrl}`}
+                  alt={book.title}
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    objectFit: "cover",
+                    borderRadius: "4px",
+                  }}
+                />
+              ) : (
+                <div
+                  style={{
+                    width: "100%",
+                    height: "100%",
+                    background: "#ddd",
+                    display: "flex",
+                    alignItems: "center",
+                    justifyContent: "center",
+                  }}
+                >
+                  No image
+                </div>
+              )}
             </div>
-          )}
-
-          {editingBook && editingBook._id === book._id && (
-            <form onSubmit={handleEditSubmit} className="mt-2 flex flex-col space-y-2 w-full">
-              <input type="text" value={editTitle} onChange={(e) => setEditTitle(e.target.value)} className="border px-2 py-1 rounded w-full" required />
-              <input type="text" value={editAuthor} onChange={(e) => setEditAuthor(e.target.value)} className="border px-2 py-1 rounded w-full" required />
-              <input type="number" value={editCopiesTotal} min={1} onChange={(e) => setEditCopiesTotal(e.target.value)} className="border px-2 py-1 rounded w-full" required />
-              <input type="file" onChange={(e) => setEditCover(e.target.files[0])} />
-              <div className="flex space-x-2">
-                <button type="submit" className="bg-green-500 text-white px-2 py-1 rounded hover:bg-green-400">Guardar</button>
-                <button type="button" onClick={cancelEdit} className="bg-gray-500 text-white px-2 py-1 rounded hover:bg-gray-400">Cancelar</button>
-              </div>
-            </form>
-          )}
-        </div>
-      ))}
+            <div className="ms-3 flex-grow-1">
+              <strong>{book.title}</strong> - {book.author} (
+              {book.year || "N/A"})<br />
+              Copias: {book.copiesAvailable}/{book.copiesTotal}
+              {user.role === "admin" && !editingBook && (
+                <div className="mt-2">
+                  <button
+                    className="btn btn-warning btn-sm me-2"
+                    onClick={() => startEditing(book)}
+                  >
+                    Editar
+                  </button>
+                  <button
+                    className="btn btn-danger btn-sm"
+                    onClick={() => handleDelete(book._id)}
+                  >
+                    Eliminar
+                  </button>
+                </div>
+              )}
+              {editingBook && editingBook._id === book._id && (
+                <form onSubmit={handleEditSubmit} className="mt-2">
+                  <input
+                    type="text"
+                    value={editTitle}
+                    onChange={(e) => setEditTitle(e.target.value)}
+                    required
+                  />
+                  <input
+                    type="text"
+                    value={editAuthor}
+                    onChange={(e) => setEditAuthor(e.target.value)}
+                    required
+                  />
+                  <input
+                    type="number"
+                    value={editCopiesTotal}
+                    min={1}
+                    onChange={(e) => setEditCopiesTotal(e.target.value)}
+                    required
+                  />
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={(e) => setEditCover(e.target.files[0])}
+                  />
+                  <button type="submit" className="btn btn-success btn-sm me-2">
+                    Guardar
+                  </button>
+                  <button
+                    type="button"
+                    className="btn btn-secondary btn-sm"
+                    onClick={cancelEdit}
+                  >
+                    Cancelar
+                  </button>
+                </form>
+              )}
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
   );
 };
