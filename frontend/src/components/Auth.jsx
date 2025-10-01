@@ -1,35 +1,38 @@
 import React, { useState } from "react";
 
 const Auth = ({ onLogin }) => {
-  const [mode, setMode] = useState("login");
+  const [isLogin, setIsLogin] = useState(true);
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [role, setRole] = useState("student"); // default student
+  const [role, setRole] = useState("student");
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    try {
-      const url =
-        mode === "login"
-          ? "http://localhost:5000/api/usuarios/login"
-          : "http://localhost:5000/api/usuarios/register";
+    setError("");
 
-      const res = await fetch(url, {
+    try {
+      // Aquí cambiamos la URL al endpoint correcto del backend
+      const endpoint = isLogin ? "usuarios/login" : "usuarios/register";
+      const res = await fetch(`http://localhost:5000/api/${endpoint}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password, role }),
+        body: JSON.stringify(
+          isLogin ? { email, password } : { name, email, password, role }
+        ),
       });
 
       const data = await res.json();
-      if (!res.ok) throw new Error(data.msg || "Error");
+
+      if (!res.ok) throw new Error(data.msg || "Error en la autenticación");
 
       localStorage.setItem("token", data.token);
-      onLogin(data.user); // <-- guardamos el usuario completo
+      onLogin(data.user);
     } catch (err) {
-      alert(err.message);
+      setError(err.message);
     } finally {
       setLoading(false);
     }
@@ -37,53 +40,55 @@ const Auth = ({ onLogin }) => {
 
   return (
     <div className="auth-container">
-      <h2>{mode === "login" ? "Iniciar sesión" : "Registro"}</h2>
-      <form onSubmit={handleSubmit}>
-        {mode === "register" && (
-          <div>
-            <label>Nombre:</label>
-            <input
-              type="text"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <label>Rol:</label>
-            <select value={role} onChange={(e) => setRole(e.target.value)}>
-              <option value="student">Estudiante</option>
-              <option value="admin">Admin</option>
-            </select>
-          </div>
-        )}
-        <div>
-          <label>Email:</label>
+      <div className="auth-box">
+        <h2>{isLogin ? "Iniciar Sesión" : "Registro"}</h2>
+        {error && <div className="alert alert-danger">{error}</div>}
+        <form onSubmit={handleSubmit}>
+          {!isLogin && (
+            <>
+              <input
+                type="text"
+                placeholder="Nombre"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                required
+              />
+              <select value={role} onChange={(e) => setRole(e.target.value)}>
+                <option value="student">Estudiante</option>
+                <option value="admin">Admin</option>
+              </select>
+            </>
+          )}
           <input
             type="email"
+            placeholder="Correo electrónico"
             value={email}
             onChange={(e) => setEmail(e.target.value)}
             required
           />
-        </div>
-        <div>
-          <label>Contraseña:</label>
           <input
             type="password"
+            placeholder="Contraseña"
             value={password}
             onChange={(e) => setPassword(e.target.value)}
             required
           />
+          <button type="submit" className="btn btn-primary" disabled={loading}>
+            {loading
+              ? "Cargando..."
+              : isLogin
+              ? "Iniciar Sesión"
+              : "Registrarse"}
+          </button>
+        </form>
+        <div className="mt-2 text-center">
+          <button className="btn btn-link" onClick={() => setIsLogin(!isLogin)}>
+            {isLogin
+              ? "¿No tienes cuenta? Registrarse"
+              : "¿Ya tienes cuenta? Iniciar sesión"}
+          </button>
         </div>
-        <button type="submit" disabled={loading}>
-          {loading
-            ? "Cargando..."
-            : mode === "login"
-            ? "Entrar"
-            : "Registrar"}
-        </button>
-      </form>
-      <button onClick={() => setMode(mode === "login" ? "register" : "login")}>
-        {mode === "login" ? "Crear cuenta" : "Ya tengo cuenta"}
-      </button>
+      </div>
     </div>
   );
 };

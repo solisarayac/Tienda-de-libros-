@@ -1,4 +1,5 @@
 import React, { useState } from "react";
+import Modal from "./Modal.jsx";
 
 const BookForm = ({ onBookAdded, token }) => {
   const [title, setTitle] = useState("");
@@ -7,9 +8,13 @@ const BookForm = ({ onBookAdded, token }) => {
   const [cover, setCover] = useState(null);
   const [loading, setLoading] = useState(false);
 
+  const [modal, setModal] = useState({ show: false, title: "", message: "" });
+
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!title || !author) return alert("El título y autor son obligatorios");
+    if (!title || !author) {
+      return setModal({ show: true, title: "Error", message: "El título y autor son obligatorios" });
+    }
 
     const formData = new FormData();
     formData.append("title", title);
@@ -24,9 +29,11 @@ const BookForm = ({ onBookAdded, token }) => {
         body: formData,
         headers: { Authorization: `Bearer ${token}` },
       });
+
       if (!res.ok) throw new Error("Error al agregar libro");
       const data = await res.json();
-      alert("Libro agregado correctamente");
+
+      setModal({ show: true, title: "Éxito", message: "Libro agregado correctamente" });
 
       setTitle("");
       setAuthor("");
@@ -35,61 +42,39 @@ const BookForm = ({ onBookAdded, token }) => {
 
       if (onBookAdded) onBookAdded(data);
     } catch (err) {
-      console.error(err);
-      alert(err.message);
+      setModal({ show: true, title: "Error", message: err.message });
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div className="book-form-container p-3 mb-4 border rounded shadow-sm">
-      <h2>Agregar Libro</h2>
-      <form onSubmit={handleSubmit}>
+    <>
+      <form onSubmit={handleSubmit} className="mb-4">
+        <h2>Agregar libro</h2>
         <div className="mb-2">
           <label>Título:</label>
-          <input
-            type="text"
-            value={title}
-            onChange={(e) => setTitle(e.target.value)}
-            required
-            className="form-control"
-          />
+          <input type="text" value={title} onChange={(e) => setTitle(e.target.value)} required className="form-control" />
         </div>
         <div className="mb-2">
           <label>Autor:</label>
-          <input
-            type="text"
-            value={author}
-            onChange={(e) => setAuthor(e.target.value)}
-            required
-            className="form-control"
-          />
+          <input type="text" value={author} onChange={(e) => setAuthor(e.target.value)} required className="form-control" />
         </div>
         <div className="mb-2">
           <label>Copias Totales:</label>
-          <input
-            type="number"
-            value={copiesTotal}
-            onChange={(e) => setCopiesTotal(e.target.value)}
-            min={1}
-            className="form-control"
-          />
+          <input type="number" value={copiesTotal} onChange={(e) => setCopiesTotal(e.target.value)} min={1} className="form-control" />
         </div>
         <div className="mb-2">
           <label>Portada:</label>
-          <input
-            type="file"
-            accept="image/*"
-            onChange={(e) => setCover(e.target.files[0])}
-            className="form-control"
-          />
+          <input type="file" accept="image/*" onChange={(e) => setCover(e.target.files[0])} className="form-control" />
         </div>
         <button type="submit" className="btn btn-primary" disabled={loading}>
           {loading ? "Cargando..." : "Agregar libro"}
         </button>
       </form>
-    </div>
+
+      <Modal show={modal.show} title={modal.title} message={modal.message} onClose={() => setModal({ ...modal, show: false })} />
+    </>
   );
 };
 
