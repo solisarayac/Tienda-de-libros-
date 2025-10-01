@@ -1,0 +1,76 @@
+const Loan = require('../models/Loan');
+const Book = require('../models/Book');
+
+exports.getUserLoans = async (req, res) => {
+  try {
+    const loans = await Loan.find({ user: req.user._id }).populate('book').sort({ borrowedAt: -1 });
+    // update overdue status on fetch (simple)
+    const now = new Date();
+    for (const loan of loans) {
+      if (loan.status === 'borrowed' && loan.dueDate < now) {
+        loan.status = 'overdue';
+      }
+    }
+    res.json(loans);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+exports.borrow = async (req, res) => {
+  try {
+    const { bookId, days } = req.body;
+    if (!bookId) return res.status(400).json({ msg: 'bookId es requerido' });
+
+    const book = await Book.findById(bookId);
+    if (!book) return res.status(404).json({ msg: 'Libro no encontrado' });
+
+    if (book.copiesAvailable < 1) return res.status(400).json({ msg: 'No hay copias disponibles' });
+
+    book.copiesAvailable = book.copiesAvailable - 1;
+    await book.save();
+
+    const borrowedAt = new Date();
+    const dueDate = new Date(borrowedAt);
+    dueDate.setDate(dueDate.getDate() + (parseInt(days) || 14)); // default 14 días
+
+    const loan = new Loan({
+      user: req.user._id,
+      book: book._id,
+      borrowedAt,
+      dueDate,
+      status: 'borrowed'
+    });
+
+    await loan.save();
+
+    res.status(201).json(loan);
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
+
+exports.returnBook = async (req, res) => {
+  try {
+    const loanId = req.params.id;
+    const loan = await Loan.findById(loanId).populate('book');
+    if (!loan) return res.status(404).json({ msg: 'Préstamo no encontrado' });
+
+    if (loan.status === 'returned') return res.status(400).json({ msg: 'Libro ya fue devuelto' });
+
+    loan.returnedAt = new Date();
+    loan.status = 'returned';
+    await loan.save();
+
+    const book = await Book.findById(loan.book._id);
+    book.copiesAvailable = (book.copiesAvailable || 0) + 1;
+    await book.save();
+
+    res.json({ msg: 'Libro devuelto', loan });
+  } catch (err) {
+    console.error(err);
+    res.status(500).json({ msg: 'Server error' });
+  }
+};
