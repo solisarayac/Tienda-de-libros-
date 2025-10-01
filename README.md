@@ -1,99 +1,106 @@
-# Biblioteca Escolar - Sistema de Gestión
+# Biblioteca App
 
-Este proyecto es un sistema de gestión de biblioteca escolar. Permite el registro y login de usuarios, gestión de libros y préstamos, y funciones administrativas para agregar, editar o eliminar libros.
+## Descripción
+Aplicación web de gestión de biblioteca con roles **Admin** y **Estudiante**. Permite agregar, editar y eliminar libros, gestionar préstamos y devoluciones, y visualizar información de manera organizada y estética.
 
 ---
 
 ## Tecnologías
-
-- **Backend:** Node.js, Express.js
-- **Base de datos:** MongoDB, Mongoose
-- **Autenticación:** JWT (JSON Web Tokens)
-- **Frontend:** HTML, CSS, JavaScript
-- **Archivos de configuración:** `.env` para variables de entorno
+- **Frontend:** React, Bootstrap
+- **Backend:** Node.js, Express
+- **Base de datos:** MongoDB
+- **Autenticación:** JWT
+- **Otros:** Multer para manejo de imágenes
 
 ---
 
-## Estructura del Proyecto
-
-📂 PROYECTO_PERSONAL_LIBRERIA_CSOLIS
-├── node_modules
-├── src
-│ ├── config
-│ │ ├── createAdmin.js
-│ │ ├── database.js
-│ │ └── seedData.js
-│ ├── controllers
-│ │ ├── authController.js
-│ │ ├── bookController.js
-│ │ └── loanController.js
-│ ├── middleware
-│ │ ├── auth.js
-│ │ └── upload.js
-│ ├── models
-│ │ ├── Book.js
-│ │ ├── Loan.js
-│ │ └── User.js
-│ ├── routes
-│ │ ├── authRoutes.js
-│ │ ├── bookRoutes.js
-│ │ └── loanRoutes.js
-│ └── ...
-├── public
-│ ├── index.html
-│ ├── script.js
-│ └── styles.css
-├── uploads
-│ └── ...
-├── .env
-├── .gitignore
-├── package-lock.json
-├── package.json
-├── README.md
-├── server.js
-
-    ---
-
 ## Instalación
 
-1. Clonar el repositorio:
-
+1. Clona el repositorio:  
 ```bash
-git clone <url-del-repositorio>
+git clone <url-del-repo>
+Instala dependencias en backend y frontend:
+
+bash
+Copiar código
 cd backend
 npm install
 
-MONGODB_URI=tu_uri_de_mongodb
-JWT_SECRET=tu_clave_secreta
+cd ../frontend
+npm install
+Configura variables de entorno en el backend (.env):
+
+env
+Copiar código
 PORT=5000
+MONGO_URI=<tu-mongo-uri>
+JWT_SECRET=<tu-secret>
+TOKEN_EXPIRES_IN=7d
+Ejecuta la app:
 
+Backend:
 
-npm run dev // para correr el proyecto PUERTO 3000
+bash
+Copiar código
+cd backend
+npm run dev
+Frontend:
 
+bash
+Copiar código
+cd frontend
+npm start
+Funcionalidades
+Roles
+Admin:
 
-## Funcionalidades
+Agregar libros
 
-Registro y login de usuarios con roles: estudiante o administrador.
+Editar y eliminar libros
 
-CRUD de libros (solo administradores pueden crear, actualizar y eliminar).
+Ver todos los préstamos activos
 
-Solicitud de préstamos y devolución de libros.
+Estudiante:
 
-Cálculo de multa por retraso en la devolución.
+Pedir libros disponibles
 
-Filtro de libros por categoría y búsqueda por título.
+Devolver libros
 
-Interfaz de usuario dinámica con HTML y JavaScript.
+Visualizar sus préstamos
 
-## Uso
+Libros
+Vista de libros disponibles con portada y detalles
 
-Registrar un usuario o iniciar sesión.
+Edición de libros solo para admin
 
-Navegar entre secciones: Libros, Préstamos, Administración.
+Eliminación de libros solo para admin
 
-Administradores pueden agregar, editar y eliminar libros.
+Préstamos
+Solicitud de préstamos solo para estudiantes
 
-Usuarios pueden solicitar préstamos y devolver libros.
+Devolución de libros
 
-Los libros se actualizan dinámicamente en la interfaz según su estado.
-```
+Tabla de préstamos con estado: Prestado o Devuelto
+
+Modal de confirmación para pedir y devolver libros
+
+Autenticación
+Registro y login con roles
+
+Persistencia de sesión mediante JWT
+
+Diseño estético y responsive
+
+Estructura de carpetas
+bash
+Copiar código
+/backend
+  /controllers
+  /middlewares
+  /models
+  /routes
+/frontend
+  /components
+  /assets
+  App.jsx
+  index.jsx
