@@ -1,30 +1,33 @@
 import React, { useState } from "react";
 
 const Auth = ({ onLogin }) => {
-  const [mode, setMode] = useState("login"); // login o register
+  const [mode, setMode] = useState("login");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [role, setRole] = useState("student"); // default student
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      const url = mode === "login" 
-        ? "http://localhost:5000/api/usuarios/login"
-        : "http://localhost:5000/api/usuarios/register";
+      const url =
+        mode === "login"
+          ? "http://localhost:5000/api/usuarios/login"
+          : "http://localhost:5000/api/usuarios/register";
 
       const res = await fetch(url, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ name, email, password }),
+        body: JSON.stringify({ name, email, password, role }),
       });
 
       const data = await res.json();
       if (!res.ok) throw new Error(data.msg || "Error");
 
-      onLogin(data.token);
+      localStorage.setItem("token", data.token);
+      onLogin(data.user); // <-- guardamos el usuario completo
     } catch (err) {
       alert(err.message);
     } finally {
@@ -45,6 +48,11 @@ const Auth = ({ onLogin }) => {
               onChange={(e) => setName(e.target.value)}
               required
             />
+            <label>Rol:</label>
+            <select value={role} onChange={(e) => setRole(e.target.value)}>
+              <option value="student">Estudiante</option>
+              <option value="admin">Admin</option>
+            </select>
           </div>
         )}
         <div>
@@ -66,7 +74,11 @@ const Auth = ({ onLogin }) => {
           />
         </div>
         <button type="submit" disabled={loading}>
-          {loading ? "Cargando..." : mode === "login" ? "Entrar" : "Registrar"}
+          {loading
+            ? "Cargando..."
+            : mode === "login"
+            ? "Entrar"
+            : "Registrar"}
         </button>
       </form>
       <button onClick={() => setMode(mode === "login" ? "register" : "login")}>

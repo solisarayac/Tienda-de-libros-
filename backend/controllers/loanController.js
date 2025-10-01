@@ -3,13 +3,22 @@ import Book from '../models/Book.js';
 
 export const getUserLoans = async (req, res) => {
   try {
-    const loans = await Loan.find({ user: req.user._id }).populate('book').sort({ borrowedAt: -1 });
+    const user = req.user;
+    let loans;
+
+    if (user.role === 'admin') {
+      // Admin ve todos los préstamos
+      loans = await Loan.find().populate('book user').sort({ borrowedAt: -1 });
+    } else {
+      // Student ve solo sus préstamos
+      loans = await Loan.find({ user: user._id }).populate('book').sort({ borrowedAt: -1 });
+    }
+
     const now = new Date();
     for (const loan of loans) {
-      if (loan.status === 'borrowed' && loan.dueDate < now) {
-        loan.status = 'overdue';
-      }
+      if (loan.status === 'borrowed' && loan.dueDate < now) loan.status = 'overdue';
     }
+
     res.json(loans);
   } catch (err) {
     console.error(err);
@@ -19,6 +28,9 @@ export const getUserLoans = async (req, res) => {
 
 export const borrow = async (req, res) => {
   try {
+    if (req.user.role !== 'student')
+      return res.status(403).json({ msg: 'Solo estudiantes pueden pedir prestado' });
+
     const { bookId, days } = req.body;
     if (!bookId) return res.status(400).json({ msg: 'bookId es requerido' });
 
@@ -43,7 +55,6 @@ export const borrow = async (req, res) => {
     });
 
     await loan.save();
-
     res.status(201).json(loan);
   } catch (err) {
     console.error(err);

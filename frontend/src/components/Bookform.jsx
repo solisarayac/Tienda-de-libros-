@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 
-const BookForm = ({ onBookAdded }) => {
+const BookForm = ({ onBookAdded, token }) => {
   const [title, setTitle] = useState("");
   const [author, setAuthor] = useState("");
   const [copiesTotal, setCopiesTotal] = useState(1);
@@ -22,6 +22,7 @@ const BookForm = ({ onBookAdded }) => {
       const res = await fetch("http://localhost:5000/api/libros", {
         method: "POST",
         body: formData,
+        headers: { Authorization: `Bearer ${token}` },
       });
 
       if (!res.ok) throw new Error("Error al agregar libro");
